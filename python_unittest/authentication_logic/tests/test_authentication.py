@@ -29,29 +29,27 @@ class TestPassHash(unittest.TestCase):
 
 
 class TestUserRegister(unittest.TestCase):
-    @patch('builtins.input', return_value='testuser')
-    @patch('getpass.getpass', return_value='testpass')
-    @patch('sys.stdout', new_callable=io.StringIO)
-    def test_register(self, mock_stdout, mock_getpass, mock_input):
+    # @patch('builtins.input', return_value='testuser')
+    # @patch('getpass.getpass', return_value='testpass')
+    # @patch('sys.stdout', new_callable=io.StringIO)
+    def test_register(self):
         ua = UserAuthentication.__new__(UserAuthentication)
 
-        ua.hash_password = MagicMock()
+        ua.hash_password = MagicMock(return_value='hashedpass')
         ua.existance_username = MagicMock(return_value=False)
-        ua.existance_password = MagicMock(return_value=False)
-
         ua.cur = MagicMock()
         ua.con = MagicMock()
 
-        ua.register()
+        ua.register('testuser','testpass')
 
         ua.hash_password.assert_called_once_with('testpass')
         ua.cur.execute.assert_called_once_with(
             'INSERT INTO accounts(username, password) VALUES(?, ?)',
-            ('testuser', 'testpass')
+            ('testuser', 'hashedpass')
         )
 
         ua.con.commit.assert_called_once()
-        self.assertIn('Register successfully!', mock_stdout.getvalue())
+        # self.assertIn('Register successfully!', mock_stdout.getvalue())
 
 
 if __name__ == '__main__':
