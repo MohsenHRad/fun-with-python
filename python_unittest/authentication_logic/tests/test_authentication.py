@@ -67,6 +67,7 @@ class TestUserRegister(unittest.TestCase):
 
 
 class TestUserLogin(unittest.TestCase):
+
     def test_validation_login_user_not_found(self):
         user_auth = UserAuthentication.__new__(UserAuthentication)
 
@@ -82,6 +83,32 @@ class TestUserLogin(unittest.TestCase):
         user_auth.cur.execute.assert_called_once_with(
             "SELECT password FROM accounts WHERE username = ?",
             ('fakeuser',))
+
+    def test_validation_login_incorrect_password(self):
+        user_auth = UserAuthentication.__new__(UserAuthentication)
+        user_auth.cur = MagicMock()
+
+        user_auth.cur.execute.return_value.fetchone.return_value = ('hashedpass',)
+
+        with self.assertRaises(ValueError) as err:
+            user_auth.validation_login('realuser', 'wrongpass')
+
+        self.assertEqual(str(err.exception), 'incorrect password')
+
+        user_auth.cur.execute.assert_called_once_with(
+            "SELECT password FROM accounts WHERE username = ?",
+            ('realuser',)
+        )
+
+    def test_user_login_successfully(self):
+        user_auth = UserAuthentication.__new__(UserAuthentication)
+        user_auth.hash_password = MagicMock(return_value='hashedpass')
+        user_auth.validation_login = MagicMock(return_value=True)
+
+        user_auth.login('testuser', 'testpass')
+
+        user_auth.hash_password.assert_called_once_with('testpass')
+        user_auth.validation_login.assert_called_once_with('testuser', 'hashedpass')
 
 
 if __name__ == '__main__':
