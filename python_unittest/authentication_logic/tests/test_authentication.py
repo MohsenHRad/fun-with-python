@@ -66,6 +66,23 @@ class TestUserRegister(unittest.TestCase):
         user_auth.con.assert_not_called()
 
 
+class TestUserLogin(unittest.TestCase):
+    def test_validation_login_user_not_found(self):
+        user_auth = UserAuthentication.__new__(UserAuthentication)
+
+        user_auth.cur = MagicMock()
+
+        user_auth.cur.execute.return_value.fetchone.return_value = None
+
+        with self.assertRaises(ValueError) as err:
+            user_auth.validation_login('fakeuser', 'testpass')
+
+        self.assertEqual(str(err.exception), 'username not found')
+
+        user_auth.cur.execute.assert_called_once_with(
+            "SELECT password FROM accounts WHERE username = ?",
+            ('fakeuser',))
+
 
 if __name__ == '__main__':
     unittest.main()
