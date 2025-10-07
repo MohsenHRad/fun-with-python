@@ -1,9 +1,7 @@
-import io
+import unittest
+from unittest.mock import MagicMock
 
 from python_unittest.authentication_logic.authentication.authentication import UserAuthentication
-
-import unittest
-from unittest.mock import patch, MagicMock
 
 
 # PassHash test
@@ -40,7 +38,7 @@ class TestUserRegister(unittest.TestCase):
         ua.cur = MagicMock()
         ua.con = MagicMock()
 
-        ua.register('testuser','testpass')
+        ua.register('testuser', 'testpass')
 
         ua.hash_password.assert_called_once_with('testpass')
         ua.cur.execute.assert_called_once_with(
@@ -50,6 +48,23 @@ class TestUserRegister(unittest.TestCase):
 
         ua.con.commit.assert_called_once()
         # self.assertIn('Register successfully!', mock_stdout.getvalue())
+
+    def test_register_existing_username(self):
+        user_auth = UserAuthentication.__new__(UserAuthentication)
+
+        user_auth.hash_password = MagicMock(return_value='hashedpass')
+        user_auth.existance_username = MagicMock(return_value=True)
+        user_auth.cur = MagicMock()
+        user_auth.con = MagicMock()
+
+        with self.assertRaises(ValueError) as errormsg:
+            user_auth.register('existinguser', 'testpass')
+
+        self.assertEqual(str(errormsg.exception), 'username already exists')
+
+        user_auth.cur.execute.assert_not_called()
+        user_auth.con.assert_not_called()
+
 
 
 if __name__ == '__main__':
