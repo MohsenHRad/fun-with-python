@@ -63,7 +63,7 @@ class TestUserRegister(unittest.TestCase):
         self.assertEqual(str(errormsg.exception), 'username already exists')
 
         user_auth.cur.execute.assert_not_called()
-        user_auth.con.assert_not_called()
+        user_auth.con.commit.assert_not_called()
 
 
 class TestUserLogin(unittest.TestCase):
